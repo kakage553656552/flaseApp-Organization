@@ -1,0 +1,531 @@
+# MSPBots App Development Rules
+
+## 📋 概述
+
+**项目架构**: React 19 + TypeScript + Vite + Tailwind CSS + MSPBots Platform  
+**可修改范围**: `pages/**`、`App.tsx`（路由与菜单配置）、`mspbot.config.ts`（可选配置）  
+**只读资源**: `.nexo/**`（共享组件、布局、工具）
+**配置文件**: 
+- `package.json` - 项目依赖和 manifest 配置
+- `mspbot.config.ts` - 可选的构建配置扩展（详见"配置扩展"章节）
+
+---
+
+## 🎯 前端开发规范
+
+### 路径别名（必须使用）
+```typescript
+import { DefaultLayout } from '@/layouts'           // @/* → .nexo/*
+import { Button, Card } from '#nexo/ui'             // #nexo/ui → .nexo/components/ui
+import { $fetch, inMicroApp } from '#nexo/shared'   // #nexo/shared → .nexo/components/shared
+```
+
+### UI 组件规范
+- **样式**: 仅使用 Tailwind CSS，禁止内联样式
+- **组件**: 仅使用 `#nexo/ui` 内置组件（Button、Card、Input、Select、Badge、Tabs、Tooltip、Alert、Progress、Skeleton、ScrollArea、Separator 等）
+- **图标**: 仅使用 `lucide-react`
+- **禁止**: 引入第三方 UI 库
+
+### 新增页面标准流程
+
+#### 1. 创建页面组件（`pages/YourPage.tsx`）
+```tsx
+import { Card, CardHeader, CardTitle, CardContent } from '#nexo/ui'
+import { IconName } from 'lucide-react'
+
+export const YourPage: React.FC = () => {
+  return (
+    <div className="space-y-6">
+      <Card>
+        <CardHeader>
+          <CardTitle>Page Title</CardTitle>
+        </CardHeader>
+        <CardContent>
+          {/* content */}
+        </CardContent>
+      </Card>
+    </div>
+  )
+}
+```
+
+#### 2. 配置路由（`package.json → manifest.menus`）
+```json
+{
+  "manifest": {
+    "menus": [
+      {
+        "name": "your-page",
+        "label": "Your Page",
+        "path": "/your-page",
+        "icon": "IconName"
+      }
+    ]
+  }
+}
+```
+
+**菜单字段说明**：
+- `name`: 路由的唯一标识（必需），用于推断组件路径和导出名称
+- `label`: 菜单显示名称（必需）
+- `path`: 路由路径（必需），"/" 表示首页（index route）
+- `icon`: 图标名称（可选），对应 `lucide-react` 中的图标组件名
+
+**自动推断规则**：
+- 组件路径：从 `name` 推断，例如 "your-page" → "YourPage.tsx"
+- 导出名称：从 `name` 推断，首字母大写，例如 "your-page" → "YourPage"
+- 路由路径：从 `path` 推断，"/" → index route，其他路径直接使用
+
+**注意**: 
+- 路由配置统一在 `package.json → manifest.menus` 中管理
+- `App.tsx` 自动从 `manifest.menus` 读取并生成路由和菜单
+- 修改配置后需要重启开发服务器
+
+---
+
+## 🌐 微前端集成
+
+### 无界微前端 API
+
+**环境检测与信息获取**:
+```typescript
+// 检查是否在无界微前端环境中
+const isWujieEnv = !!(window as any).__POWERED_BY_WUJIE__ || !!(window as any).$wujie
+
+if (isWujieEnv && window.$wujie) {
+  const props = window.$wujie.props              // 主应用传递的 props
+  const bus = window.$wujie.bus                  // 事件总线
+}
+```
+
+**事件通信**:
+```typescript
+// 发送事件到主应用
+window.$wujie?.bus.$emit('user-login', { userId: '123' })
+
+// 监听主应用事件
+window.$wujie?.bus.$on('theme-change', (data) => {
+  console.log('Theme changed:', data)
+})
+
+// 取消监听
+window.$wujie?.bus.$off('theme-change', handler)
+```
+
+**生命周期函数**（子应用入口文件）:
+```typescript
+// 子应用挂载
+export async function mount(props?: any) {
+  // 将 props 传递给 window.$wujie.props
+  if (props && typeof window !== 'undefined') {
+    if (!window.$wujie) {
+      (window as any).$wujie = {}
+    }
+    window.$wujie.props = props
+  }
+  // 渲染应用
+  render(props)
+}
+
+// 子应用卸载
+export async function unmount(props?: any) {
+  // 清理资源
+  if (root) {
+    root.unmount()
+    root = null
+  }
+}
+```
+
+**主应用使用 WujieReact**:
+```typescript
+import { WujieReact } from 'wujie-react'
+import { bus } from 'wujie'
+
+// 监听子应用事件
+bus.$on('sidebar-toggle', (data) => {
+  // 处理事件
+})
+
+// 加载子应用
+<WujieReact
+  name="sub-app"
+  url="http://localhost:8002/apps/sub-app"
+  sync={true}
+  props={{ sidebarState }}
+/>
+```
+
+**路由模式和非路由模式**:
+- **路由模式**：使用 `react-router-dom` 的 `Routes` 和 `Route` 组件（react-template 默认模式）
+- **非路由模式**：不使用路由，直接渲染组件（适用于 header/sidebar/layout 等微前端子应用）
+
+### `$fetch` 使用规范（重要！）
+
+**必须使用 `$fetch` 调用后端 API**（自动携带认证头并添加路由前缀）:
+```typescript
+import { $fetch } from '#nexo/shared'
+
+// 正确用法：只能调用本 APP 的 server.ts API
+// $fetch 会自动添加 /apps/${appId}/api 前缀
+const res = await $fetch('./api/hello')
+// 实际请求路径: /apps/${appId}/api/hello (dev 和 build 模式都会自动添加)
+
+if (!res.ok) throw new Error(`Request failed: ${res.status}`)
+const data = await res.json()
+```
+
+**⚠️ 关键架构规则**:
+- 🚫 **前端禁止直接调用 SDK API**（如 `${GATEWAY_URL}/api/sdk/*`）
+- ✅ **前端只能调用本 APP 的 `server.ts` 定义的 API**（`./api/*`）
+- ✅ 所有与 SDK 的交互必须通过 `server.ts` 的 `ctx` 工具完成
+- ✅ 数据流向：`前端组件` → `pages/services/*.ts` → `$fetch('./api/*')` → `server.ts` → `ctx.*`
+
+**`$fetch` 特性**:
+- ✅ **自动添加路由前缀**: `./api/hello` → `/apps/${appId}/api/hello`（dev 和 build 模式）
+  - 应用 ID 从 `manifest.json` 或 `package.json` 的 `name` 字段自动获取
+  - 确保不会重复添加前缀（如果路径已包含 `/apps/${appId}/api`）
+- ✅ **自动注入认证头**: `token`, `Authorization`, `tenantCode`, `userId`, `headUrl`, `loginAsRoleId`, `loginAsUserId`, `timezoneOffset`, `timezoneId`
+- ✅ **必须使用相对路径**: `./api/*`（不要使用绝对路径）
+- ⚠️ **禁止覆盖或清空认证头**
+- ⚠️ **绝对 URL**（`http://` 或 `https://`）会直接传递，不会添加前缀
+
+**路由前缀说明**:
+- Dev 模式: base = `/`，路由为 `/apps/${appId}/api/hello`
+- Build 模式: base = `/apps/${appName}/`，路由仍为 `/apps/${appId}/api/hello`（使用绝对路径避免 base 影响）
+- `$fetch` 会自动处理路径转换，开发者无需关心前缀
+
+---
+
+## ⚙️ 后端开发规范
+
+### 路由定义规范
+
+**文件**: `server.ts` → 构建后 `server.js`  
+**格式**: `async 'METHOD /api/path'(req: Request, ctx: Context)`
+
+```typescript
+const routes: ServerExports = {
+  async 'GET /api/data'(req: Request, ctx: Context) {
+    return { message: 'Hello', appId: ctx.app.id }
+  },
+  
+  async 'POST /api/data'(req: Request, ctx: Context) {
+    const body = await req.json()
+    return { success: true, received: body }
+  },
+  
+  async 'GET /api/items/:id'(req: Request, ctx: Context) {
+    const id = ctx.params.id  // Path parameter
+    return { id }
+  },
+}
+
+export default routes
+```
+
+**路由前缀说明**:
+- ✅ **开发模式**（`mspbots dev`）: 路由会自动添加 `/apps/${appId}/api` 前缀
+  - 定义: `'GET /api/hello'` → 实际路由: `GET /apps/${appId}/api/hello`
+  - 应用 ID 从 `manifest.json` 或 `package.json` 的 `name` 字段自动获取
+- ✅ **构建模式**（`mspbots build`）: 路由同样会添加 `/apps/${appId}/api` 前缀
+- ⚠️ **不要手动添加应用 ID 前缀**: 在 `server.ts` 中直接定义 `'GET /api/hello'` 即可，系统会自动处理
+
+**注意**: 类型 `Context` 和 `ServerExports` 由 `@mspbots/server` 包自动提供，无需手动导入。
+
+### Context 对象
+
+Context 提供应用的基础信息：
+
+```typescript
+interface Context {
+  app: {
+    id: string              // 应用 ID
+    name: string            // 应用名称
+    version?: string        // 应用版本
+    description?: string    // 应用描述
+    icon?: string           // 应用图标
+    permissions?: Record<string, unknown>  // 应用权限配置
+  }
+}
+```
+
+### 全局 api() 函数
+
+**仅在开发环境可用**（`mspbots dev`）
+
+在开发模式下，使用全局 `api()` 函数调用 Gateway SDK API：
+
+```typescript
+// 调用 KV Store
+const result = await api(`/apps/${ctx.app.id}/sdk/kv/set`, {
+  method: 'POST',
+  body: { key: 'myKey', value: { data: 'value' } },
+});
+
+// 调用 HTTP Client
+const result = await api(`/apps/${ctx.app.id}/sdk/http/fetch`, {
+  method: 'POST',
+  body: { url: 'https://api.example.com' },
+});
+
+// 调用 LangChain
+const result = await api(`/apps/${ctx.app.id}/sdk/langchain/chat`, {
+  method: 'POST',
+  body: { 
+    prompt: 'Hello AI',
+    options: { model: 'gpt-3.5-turbo' }
+  },
+});
+
+// 使用自定义 headers（不会覆盖 Content-Type 和 X-App-Id）
+const result = await api(`/apps/${ctx.app.id}/sdk/kv/set`, {
+  method: 'POST',
+  body: { key, value },
+  headers: {
+    'X-Custom-Header': 'custom-value',
+    'Authorization': 'Bearer token',
+  },
+});
+```
+
+**特点**：
+- ✅ 自动序列化 body 为 JSON（传对象即可）
+- ✅ 自动处理 Gateway URL 配置
+- ✅ 自动添加 `Content-Type: application/json` 头
+- ✅ 自动添加 `X-App-Id` 头（值为 `ctx.app.id`）
+- ✅ 支持自定义 headers（不会覆盖自动添加的头）
+- ✅ 自动错误处理
+- ⚠️ 仅在 `mspbots dev` 时可用
+- ⚠️ 生产环境由平台提供原生 ctx 工具
+
+**路径格式**：`/apps/{appId}/sdk/{feature}/{action}`
+
+**支持的功能**：
+- **KV Store**: `/apps/${ctx.app.id}/sdk/kv/*`
+- **HTTP Client**: `/apps/${ctx.app.id}/sdk/http/*`
+- **LangChain**: `/apps/${ctx.app.id}/sdk/langchain/*`
+- **AppManager**: `/apps/${ctx.app.id}/sdk/appmanager/*`
+- **App Menus**: `/apps/${ctx.app.id}/sdk/appmenus/*`
+
+### 完整示例
+
+```typescript
+import type { Context, ServerExports } from '@mspbots/type'
+
+const routes: ServerExports = {
+  async 'GET /api/hello'(req: Request, ctx: Context) {
+    return {
+      message: 'Hello World!',
+      timestamp: new Date().toISOString(),
+      app: ctx.app,
+    };
+  },
+
+  async 'POST /api/data'(req: Request, ctx: Context) {
+    const body = await req.json();
+    const { key, value } = body;
+    
+    // 使用全局 api() 函数调用 Gateway SDK
+    const result = await api(`/apps/${ctx.app.id}/sdk/kv/set`, {
+      method: 'POST',
+      body: { key, value },
+    });
+    
+    return result;
+  },
+
+  async 'POST /api/ai-chat'(req: Request, ctx: Context) {
+    const { prompt } = await req.json();
+    
+    // 调用 LangChain AI
+    const result = await api(`/apps/${ctx.app.id}/sdk/langchain/chat`, {
+      method: 'POST',
+      body: {
+        prompt,
+        options: { temperature: 0.7, maxTokens: 200 }
+      },
+    });
+    
+    return result;
+  },
+}
+
+export default routes
+```
+
+**关键注意事项**:
+- ✅ Context 只包含应用基础信息
+- ✅ 使用全局 `api()` 函数调用 Gateway SDK
+- ✅ 前端使用 `$fetch('./api/*')` 调用后端 API（自动添加 `/apps/${appId}/api` 前缀）
+- ✅ 后端路由定义 `'GET /api/hello'` 会自动注册为 `GET /apps/${appId}/api/hello`
+- ⚠️ `api()` 函数仅在开发环境（`mspbots dev`）可用
+
+---
+
+## ⚙️ 配置扩展（可选）
+
+### mspbot.config.ts
+
+可选配置文件，用于扩展 Vite 构建配置。CLI 提供了内置的默认配置，大多数情况下不需要自定义。
+
+**何时使用**：
+- 需要添加自定义 Vite 插件
+- 需要调整构建选项（如 chunk 大小限制）
+- 需要添加额外的路径别名
+- 需要自定义 public 目录或 base 路径
+
+**配置示例**：
+
+```typescript
+import { defineConfig } from '@mspbots/client/config'
+
+export default defineConfig({
+  // 方式1: 使用函数扩展配置
+  vite: (config) => {
+    // 修改默认配置
+    config.build = config.build || {}
+    config.build.chunkSizeWarningLimit = 1000
+    return config
+  },
+  
+  // 方式2: 直接提供配置对象（会与默认配置深度合并）
+  // vite: {
+  //   build: {
+  //     chunkSizeWarningLimit: 1000,
+  //   },
+  // },
+  
+  // 添加自定义路径别名
+  aliases: {
+    '@components': './src/components',
+    '@utils': './src/utils',
+  },
+  
+  // 添加额外的 Vite 插件
+  // plugins: [
+  //   someVitePlugin(),
+  // ],
+  
+  // 自定义 public 目录（默认：.nexo/public）
+  // publicDir: './public',
+  
+  // 自定义 base 路径（默认：./）
+  // base: '/my-app/',
+})
+```
+
+**内置默认配置**：
+- 路径别名：`@/*`, `#nexo/ui`, `#nexo/shared`
+- Public 目录：`.nexo/public`
+- 输出目录：`dist/`
+- 代码分割：Vite 自动优化
+- 压缩：esbuild
+- 文件命名：`assets/js/[name]-[hash].js`, `assets/[ext]/[name]-[hash].[ext]`
+
+**注意**：
+- 此文件完全可选，不创建也能正常开发和构建
+- 配置会在 `mspbots dev` 和 `mspbots build` 时自动加载
+- 支持 TypeScript (`.ts`) 和 JavaScript (`.js`) 格式
+
+---
+
+## 📦 Manifest 配置
+
+**位置**: `package.json → manifest` 字段
+
+### 基础配置
+```json
+{
+  "name": "app-management",
+  "version": "1.0.0",
+  "manifest": {
+    "icon": "📦",
+    "hasBackend": true,
+    "permissions": {
+      "kv": true,
+      "mspbots": ["chat"],
+      "http": []
+    }
+  }
+}
+```
+
+### 完整权限配置（包含菜单）
+```json
+{
+  "manifest": {
+    "icon": "🚀",
+    "hasBackend": true,
+    "permissions": {
+      "kv": true,
+      "http": ["https://api.example.com"],
+      "mspbots": ["chat", "tools"],
+      "langchain": {
+        "enabled": true,
+        "features": ["chat", "embed"],
+        "models": ["gpt-3.5-turbo", "gpt-4"]
+      }
+    },
+    "menus": [
+      {
+        "name": "home",
+        "label": "首页",
+        "path": "/",
+        "icon": "Home"
+      },
+      {
+        "name": "settings",
+        "label": "设置",
+        "path": "/settings",
+        "icon": "Settings"
+      }
+    ]
+  }
+}
+```
+
+---
+
+## 📚 快速参考
+
+### 开发检查清单
+
+**前端新增页面**:
+- [ ] 在 `pages/` 创建组件（命名导出）
+- [ ] 在 `package.json → manifest.menus` 添加路由配置
+- [ ] 使用 `#nexo/ui` 组件和 Tailwind CSS
+- [ ] Icon 从 `lucide-react` 引入
+- [ ] 需要调用 API 时，在 `pages/services/` 创建 service 层，使用 `$fetch('./api/*')` 调用本 APP 的 `server.ts` API
+- [ ] 修改配置后重启开发服务器
+
+**后端新增接口**:
+- [ ] 查看 Gateway SDK API 文档了解可用功能
+- [ ] 在 `package.json → manifest.permissions` 声明权限
+- [ ] 在 `server.ts` 定义路由（路由会自动添加 `/api/${appId}` 前缀）
+- [ ] 使用全局 `api()` 函数调用 Gateway SDK
+- [ ] 前端使用 `$fetch('./api/*')` 调用（会自动转换为 `/api/${appId}/*`）
+
+**微前端集成**:
+- [ ] 使用 `inMicroApp()` 检测环境
+- [ ] 通过 `useMicroProps()` 获取主应用数据
+- [ ] 使用 `sendHost`/`onHost` 通信
+- [ ] 使用 `$fetch` 自动携带认证头
+
+### 关键原则
+
+1. **路径别名**: 始终使用 `@/*`、`#nexo/ui`、`#nexo/shared`
+2. **UI 组件**: 仅使用 `#nexo/ui`，禁止引入第三方 UI 库
+3. **前端架构**: 🚫 前端绝对禁止直接调用 SDK API，只能通过 `$fetch('./api/*')` 调用本 APP 的 `server.ts`
+4. **Context 对象**: Context 只包含应用基础信息（id, name, version, description, icon, permissions）
+5. **网络请求**: 
+   - 前端：使用 `$fetch('./api/*')` 调用本 APP 的 server.ts（自动添加 `/apps/${appId}/api` 前缀）
+   - 后端：使用全局 `api()` 函数调用 Gateway SDK
+   - 路由前缀：dev 和 build 模式下，`$fetch` 和 `server.ts` 路由都会自动添加 `/apps/${appId}/api` 前缀
+6. **权限管理**: 所有后端能力必须先在 manifest 声明权限
+7. **开发环境**: `api()` 函数仅在 `mspbots dev` 时可用，生产环境由平台提供
+8. **配置扩展**: 
+   - Vite 配置由 CLI 内置提供，无需手动配置
+   - 如需自定义，可创建 `mspbot.config.ts` 扩展配置
+   - 大多数项目使用默认配置即可
+
