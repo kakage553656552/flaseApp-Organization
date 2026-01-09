@@ -1,11 +1,13 @@
 /**
  * Server-side API Routes
- * 组织架构图应用 - 支持 CRUD 操作
+ * Org Chart Application - Supporting CRUD Operations
  */
 
-// ============ Mock 数据 ============
+import type { Context, ServerExports } from '@mspbots/server'
 
-// 组织节点
+// ============ Mock Data ============
+
+// Org Node
 interface OrgNode {
   id: string
   name: string
@@ -17,7 +19,7 @@ interface OrgNode {
   children?: OrgNode[]
 }
 
-// 用户数据
+// User Data
 interface User {
   id: string
   name: string
@@ -27,87 +29,87 @@ interface User {
   title: string
 }
 
-// 模拟当前登录用户
+// Current logged in user simulation
 let currentUser: User | null = null
 
-// 可用的头像列表
+// Available avatar list
 const avatarOptions = ['👨‍💼', '👩‍💼', '👨‍💻', '👩‍💻', '🧑‍💻', '👨‍🎨', '👩‍🎨', '📊', '📋', '🎨', '🖌️', '👤', '👥']
 
-// Mock 组织架构数据（可修改）
+// Mock organization chart data (editable)
 let orgData: OrgNode = {
   id: 'u001',
-  name: '王总',
+  name: 'John Wang',
   title: 'CEO',
-  department: '总裁办',
+  department: 'Executive Office',
   avatar: '👨‍💼',
-  email: 'wangzong@contoso.com',
+  email: 'john.wang@contoso.com',
   parentId: null,
   children: [
     {
       id: 'u002',
-      name: '张三',
-      title: '技术总监',
-      department: '技术部',
+      name: 'Michael Zhang',
+      title: 'CTO',
+      department: 'Technology',
       avatar: '👨‍💻',
-      email: 'zhangsan@contoso.com',
+      email: 'michael.zhang@contoso.com',
       parentId: 'u001',
       children: [
         {
           id: 'u003',
-          name: '李四',
-          title: '前端负责人',
-          department: '技术部',
+          name: 'Sarah Lee',
+          title: 'Frontend Lead',
+          department: 'Technology',
           avatar: '👨‍🎨',
-          email: 'lisi@contoso.com',
+          email: 'sarah.lee@contoso.com',
           parentId: 'u002',
           children: [
-            { id: 'u004', name: '王五', title: '前端工程师', department: '技术部', avatar: '👩‍💻', email: 'wangwu@contoso.com', parentId: 'u003' },
-            { id: 'u005', name: '赵六', title: '前端工程师', department: '技术部', avatar: '👨‍💻', email: 'zhaoliu@contoso.com', parentId: 'u003' },
+            { id: 'u004', name: 'David Wang', title: 'Frontend Engineer', department: 'Technology', avatar: '👩‍💻', email: 'david.wang@contoso.com', parentId: 'u003' },
+            { id: 'u005', name: 'Elena Zhao', title: 'Frontend Engineer', department: 'Technology', avatar: '👨‍💻', email: 'elena.zhao@contoso.com', parentId: 'u003' },
           ]
         },
         {
           id: 'u006',
-          name: '钱七',
-          title: '后端负责人',
-          department: '技术部',
+          name: 'Robert Qian',
+          title: 'Backend Lead',
+          department: 'Technology',
           avatar: '🧑‍💻',
-          email: 'qianqi@contoso.com',
+          email: 'robert.qian@contoso.com',
           parentId: 'u002',
           children: [
-            { id: 'u007', name: '孙八', title: '后端工程师', department: '技术部', avatar: '👨‍💻', email: 'sunba@contoso.com', parentId: 'u006' },
-            { id: 'u008', name: '周九', title: '后端工程师', department: '技术部', avatar: '👩‍💻', email: 'zhoujiu@contoso.com', parentId: 'u006' },
+            { id: 'u007', name: 'Steve Sun', title: 'Backend Engineer', department: 'Technology', avatar: '👨‍💻', email: 'steve.sun@contoso.com', parentId: 'u006' },
+            { id: 'u008', name: 'Jenny Zhou', title: 'Backend Engineer', department: 'Technology', avatar: '👩‍💻', email: 'jenny.zhou@contoso.com', parentId: 'u006' },
           ]
         },
       ]
     },
     {
       id: 'u009',
-      name: '吴十',
-      title: '产品总监',
-      department: '产品部',
+      name: 'Lisa Wu',
+      title: 'Product Director',
+      department: 'Product',
       avatar: '📊',
-      email: 'wushi@contoso.com',
+      email: 'lisa.wu@contoso.com',
       parentId: 'u001',
       children: [
-        { id: 'u010', name: '郑一', title: '产品经理', department: '产品部', avatar: '📋', email: 'zhengyi@contoso.com', parentId: 'u009' },
+        { id: 'u010', name: 'Adam Zheng', title: 'Product Manager', department: 'Product', avatar: '📋', email: 'adam.zheng@contoso.com', parentId: 'u009' },
       ]
     },
     {
       id: 'u011',
-      name: '冯二',
-      title: '设计总监',
-      department: '设计部',
+      name: 'Kevin Feng',
+      title: 'Design Director',
+      department: 'Design',
       avatar: '🎨',
-      email: 'fenger@contoso.com',
+      email: 'kevin.feng@contoso.com',
       parentId: 'u001',
       children: [
-        { id: 'u012', name: '陈三', title: 'UI设计师', department: '设计部', avatar: '🖌️', email: 'chensan@contoso.com', parentId: 'u011' },
+        { id: 'u012', name: 'Alice Chen', title: 'UI Designer', department: 'Design', avatar: '🖌️', email: 'alice.chen@contoso.com', parentId: 'u011' },
       ]
     },
   ]
 }
 
-// 辅助函数：在树中查找节点
+// Helper: Find node in tree
 function findNode(tree: OrgNode, id: string): OrgNode | null {
   if (tree.id === id) return tree
   if (tree.children) {
@@ -119,7 +121,7 @@ function findNode(tree: OrgNode, id: string): OrgNode | null {
   return null
 }
 
-// 辅助函数：在树中查找父节点
+// Helper: Find parent node in tree
 function findParent(tree: OrgNode, childId: string): OrgNode | null {
   if (tree.children) {
     for (const child of tree.children) {
@@ -131,7 +133,7 @@ function findParent(tree: OrgNode, childId: string): OrgNode | null {
   return null
 }
 
-// 辅助函数：从树中删除节点
+// Helper: Remove node from tree
 function removeNode(tree: OrgNode, id: string): boolean {
   if (tree.children) {
     const index = tree.children.findIndex(c => c.id === id)
@@ -146,7 +148,7 @@ function removeNode(tree: OrgNode, id: string): boolean {
   return false
 }
 
-// 辅助函数：统计节点数量
+// Helper: Count nodes
 function countNodes(tree: OrgNode): number {
   let count = 1
   if (tree.children) {
@@ -157,13 +159,13 @@ function countNodes(tree: OrgNode): number {
   return count
 }
 
-// 生成唯一 ID
+// Generate unique ID
 let idCounter = 100
 function generateId(): string {
   return `u${++idCounter}`
 }
 
-// 转换为用户列表
+// Flatten tree to user list
 function flattenTree(tree: OrgNode): User[] {
   const users: User[] = [{
     id: tree.id,
@@ -179,10 +181,10 @@ function flattenTree(tree: OrgNode): User[] {
   return users
 }
 
-// ============ API 路由 ============
+// ============ API Routes ============
 
 const routes: ServerExports = {
-  // 登录
+  // Login
   async 'POST /api/auth/login'(req: Request, ctx: Context) {
     const body = await req.json()
     const { email } = body
@@ -190,7 +192,7 @@ const routes: ServerExports = {
     const user = email ? users.find(u => u.email === email) : users[0]
     
     if (!user) {
-      return { success: false, error: '用户不存在' }
+      return { success: false, error: 'User does not exist' }
     }
     
     currentUser = user
@@ -201,21 +203,21 @@ const routes: ServerExports = {
     }
   },
 
-  // 获取当前用户
+  // Get current user
   async 'GET /api/auth/me'(req: Request, ctx: Context) {
     if (!currentUser) {
-      return { success: false, error: '未登录' }
+      return { success: false, error: 'Not logged in' }
     }
     return { success: true, user: currentUser }
   },
 
-  // 退出登录
+  // Logout
   async 'POST /api/auth/logout'(req: Request, ctx: Context) {
     currentUser = null
     return { success: true }
   },
 
-  // 获取组织成员列表
+  // Get members list
   async 'GET /api/org/members'(req: Request, ctx: Context) {
     const members = flattenTree(orgData)
     return {
@@ -225,7 +227,7 @@ const routes: ServerExports = {
     }
   },
 
-  // 获取组织架构树
+  // Get organization tree
   async 'GET /api/org/tree'(req: Request, ctx: Context) {
     return {
       success: true,
@@ -237,20 +239,20 @@ const routes: ServerExports = {
     }
   },
 
-  // ===== CRUD 操作 =====
+  // ===== CRUD Operations =====
 
-  // 创建成员
+  // Create member
   async 'POST /api/org/member'(req: Request, ctx: Context) {
     const body = await req.json()
     const { name, title, department, avatar, email, parentId } = body
 
     if (!name || !title || !department || !parentId) {
-      return { success: false, error: '缺少必填字段' }
+      return { success: false, error: 'Missing required fields' }
     }
 
     const parent = findNode(orgData, parentId)
     if (!parent) {
-      return { success: false, error: '上级不存在' }
+      return { success: false, error: 'Superior does not exist' }
     }
 
     const newMember: OrgNode = {
@@ -271,32 +273,34 @@ const routes: ServerExports = {
     return {
       success: true,
       member: newMember,
-      message: '成员添加成功',
+      message: 'Member added successfully',
     }
   },
 
-  // 更新成员
+  // Update member
   async 'PUT /api/org/member/:id'(req: Request, ctx: Context) {
-    // 从 URL 中提取 id（ctx.params 在此框架中可能不可用）
     const url = new URL(req.url)
     const pathParts = url.pathname.split('/')
-    // 路径格式: /apps/test-app/api/org/member/:id
+    // URL format: /api/org/member/[id]
     const memberIndex = pathParts.indexOf('member')
-    const id = memberIndex >= 0 && pathParts.length > memberIndex + 1 ? pathParts[memberIndex + 1] : ctx.params?.id
+    const id = memberIndex >= 0 && pathParts.length > memberIndex + 1 ? pathParts[memberIndex + 1] : null
     
     if (!id) {
-      return { success: false, error: '缺少成员 ID' }
+      return { success: false, error: 'Missing member ID' }
     }
 
     const body = await req.json()
     const { name, title, department, avatar, email } = body
 
-    const member = findNode(orgData, id)
-    if (!member) {
-      return { success: false, error: '成员不存在' }
+    if (!name && !title && !department && !avatar && email === undefined) {
+      return { success: false, error: 'No fields provided for update' }
     }
 
-    // 更新字段
+    const member = findNode(orgData, id)
+    if (!member) {
+      return { success: false, error: 'Member does not exist' }
+    }
+
     if (name) member.name = name
     if (title) member.title = title
     if (department) member.department = department
@@ -306,65 +310,61 @@ const routes: ServerExports = {
     return {
       success: true,
       member,
-      message: '成员更新成功',
+      message: 'Member updated successfully',
     }
   },
 
-  // 删除成员
+  // Delete member
   async 'DELETE /api/org/member/:id'(req: Request, ctx: Context) {
-    // 从 URL 中提取 id（ctx.params 在此框架中可能不可用）
     const url = new URL(req.url)
     const pathParts = url.pathname.split('/')
-    // 路径格式: /apps/test-app/api/org/member/:id
+    // URL format: /api/org/member/[id]
     const memberIndex = pathParts.indexOf('member')
-    const id = memberIndex >= 0 && pathParts.length > memberIndex + 1 ? pathParts[memberIndex + 1] : ctx.params?.id
+    const id = memberIndex >= 0 && pathParts.length > memberIndex + 1 ? pathParts[memberIndex + 1] : null
     
     if (!id) {
-      return { success: false, error: '缺少成员 ID' }
+      return { success: false, error: 'Missing member ID' }
     }
 
-    // 不能删除根节点
     if (id === orgData.id) {
-      return { success: false, error: '不能删除根节点' }
+      return { success: false, error: 'Cannot delete the organization head (root node)' }
     }
 
     const member = findNode(orgData, id)
     if (!member) {
-      return { success: false, error: '成员不存在' }
+      return { success: false, error: 'Member does not exist' }
     }
 
-    // 检查是否有子节点
     if (member.children && member.children.length > 0) {
-      return { success: false, error: '请先删除该成员的下属' }
+      return { success: false, error: 'Cannot delete a member who has subordinates. Please reassign or delete subordinates first.' }
     }
 
     const removed = removeNode(orgData, id)
     if (!removed) {
-      return { success: false, error: '删除失败' }
+      return { success: false, error: 'Failed to delete member from the database' }
     }
 
     return {
       success: true,
-      message: '成员删除成功',
+      message: 'Member deleted successfully',
     }
   },
 
-  // 获取单个成员详情
+  // Get single member details
   async 'GET /api/org/member/:id'(req: Request, ctx: Context) {
-    // 从 URL 中提取 id（ctx.params 在此框架中可能不可用）
     const url = new URL(req.url)
     const pathParts = url.pathname.split('/')
-    // 路径格式: /apps/test-app/api/org/member/:id
+    // URL format: /api/org/member/[id]
     const memberIndex = pathParts.indexOf('member')
-    const id = memberIndex >= 0 && pathParts.length > memberIndex + 1 ? pathParts[memberIndex + 1] : ctx.params?.id
+    const id = memberIndex >= 0 && pathParts.length > memberIndex + 1 ? pathParts[memberIndex + 1] : null
     
     if (!id) {
-      return { success: false, error: '缺少成员 ID' }
+      return { success: false, error: 'Missing member ID' }
     }
 
     const member = findNode(orgData, id)
     if (!member) {
-      return { success: false, error: '成员不存在' }
+      return { success: false, error: 'Member does not exist' }
     }
 
     return {
@@ -373,49 +373,44 @@ const routes: ServerExports = {
     }
   },
 
-  // 移动成员到新的上级
+  // Move member to new superior
   async 'POST /api/org/member/:id/move'(req: Request, ctx: Context) {
-    // 从 URL 中提取 id
     const url = new URL(req.url)
     const pathParts = url.pathname.split('/')
-    // 路径格式: /apps/test-app/api/org/member/:id/move
+    // URL format: /api/org/member/[id]/move
     const moveIndex = pathParts.indexOf('move')
-    const id = moveIndex > 0 ? pathParts[moveIndex - 1] : ctx.params?.id
-    
-    console.log('Move API called:', { url: req.url, id, pathParts })
+    const id = moveIndex > 0 ? pathParts[moveIndex - 1] : null
     
     if (!id) {
-      return { success: false, error: '缺少成员 ID' }
+      return { success: false, error: 'Missing member ID' }
     }
 
     const body = await req.json()
     const { newParentId } = body
 
     if (!newParentId) {
-      return { success: false, error: '缺少目标上级 ID' }
+      return { success: false, error: 'Missing target superior ID' }
     }
 
-    // 不能移动根节点
     if (id === orgData.id) {
-      return { success: false, error: '不能移动根节点' }
+      return { success: false, error: 'Cannot move root node' }
     }
 
-    // 不能移动到自己下面
     if (id === newParentId) {
-      return { success: false, error: '不能移动到自己下面' }
+      return { success: false, error: 'Cannot move under yourself' }
     }
 
     const member = findNode(orgData, id)
     if (!member) {
-      return { success: false, error: '成员不存在' }
+      return { success: false, error: 'Member does not exist' }
     }
 
     const newParent = findNode(orgData, newParentId)
     if (!newParent) {
-      return { success: false, error: '目标上级不存在' }
+      return { success: false, error: 'Target superior does not exist' }
     }
 
-    // 检查是否会形成循环（不能移动到自己的子节点下）
+    // Check for circular reference
     const isDescendant = (node: OrgNode, targetId: string): boolean => {
       if (node.id === targetId) return true
       if (node.children) {
@@ -427,16 +422,14 @@ const routes: ServerExports = {
     }
 
     if (isDescendant(member, newParentId)) {
-      return { success: false, error: '不能移动到自己的下属节点下' }
+      return { success: false, error: 'Cannot move under your own subordinates' }
     }
 
-    // 从原位置移除
     const removed = removeNode(orgData, id)
     if (!removed) {
-      return { success: false, error: '移动失败' }
+      return { success: false, error: 'Move failed' }
     }
 
-    // 添加到新位置
     if (!newParent.children) {
       newParent.children = []
     }
@@ -445,7 +438,7 @@ const routes: ServerExports = {
 
     return {
       success: true,
-      message: '成员移动成功',
+      message: 'Member moved successfully',
       member,
     }
   },

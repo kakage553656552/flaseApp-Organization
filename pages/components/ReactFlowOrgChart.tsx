@@ -17,7 +17,7 @@ import ReactFlow, {
 import 'reactflow/dist/style.css'
 import { Plus, Edit2, Trash2, X, Check } from 'lucide-react'
 
-// 组织节点类型
+// Org Node Type
 interface OrgNode {
   id: string
   name: string
@@ -29,7 +29,7 @@ interface OrgNode {
   children?: OrgNode[]
 }
 
-// 表单数据类型
+// Form Data Type
 interface MemberFormData {
   name: string
   title: string
@@ -39,24 +39,24 @@ interface MemberFormData {
   parentId: string
 }
 
-// 可用头像
+// Available Avatars
 const avatarOptions = ['👨‍💼', '👩‍💼', '👨‍💻', '👩‍💻', '🧑‍💻', '👨‍🎨', '👩‍🎨', '📊', '📋', '🎨', '🖌️', '👤', '👥']
 
-// 部门选项
-const departmentOptions = ['总裁办', '技术部', '产品部', '设计部', '市场部', '人事部', '财务部']
+// Department Options
+const departmentOptions = ['Executive Office', 'Technology', 'Product', 'Design', 'Marketing', 'HR', 'Finance']
 
-// 部门颜色映射
+// Department Color Mapping
 const departmentColors: Record<string, { bg: string; border: string; text: string }> = {
-  '总裁办': { bg: 'bg-amber-50', border: 'border-amber-300', text: 'text-amber-700' },
-  '技术部': { bg: 'bg-blue-50', border: 'border-blue-300', text: 'text-blue-700' },
-  '产品部': { bg: 'bg-emerald-50', border: 'border-emerald-300', text: 'text-emerald-700' },
-  '设计部': { bg: 'bg-purple-50', border: 'border-purple-300', text: 'text-purple-700' },
-  '市场部': { bg: 'bg-pink-50', border: 'border-pink-300', text: 'text-pink-700' },
-  '人事部': { bg: 'bg-orange-50', border: 'border-orange-300', text: 'text-orange-700' },
-  '财务部': { bg: 'bg-cyan-50', border: 'border-cyan-300', text: 'text-cyan-700' },
+  'Executive Office': { bg: 'bg-amber-50', border: 'border-amber-300', text: 'text-amber-700' },
+  'Technology': { bg: 'bg-blue-50', border: 'border-blue-300', text: 'text-blue-700' },
+  'Product': { bg: 'bg-emerald-50', border: 'border-emerald-300', text: 'text-emerald-700' },
+  'Design': { bg: 'bg-purple-50', border: 'border-purple-300', text: 'text-purple-700' },
+  'Marketing': { bg: 'bg-pink-50', border: 'border-pink-300', text: 'text-pink-700' },
+  'HR': { bg: 'bg-orange-50', border: 'border-orange-300', text: 'text-orange-700' },
+  'Finance': { bg: 'bg-cyan-50', border: 'border-cyan-300', text: 'text-cyan-700' },
 }
 
-// ===== 弹窗组件 =====
+// ===== Modal Component =====
 function Modal({ 
   isOpen, 
   onClose, 
@@ -88,7 +88,7 @@ function Modal({
   )
 }
 
-// ===== 成员表单组件 =====
+// ===== Member Form Component =====
 function MemberForm({
   initialData,
   parentOptions,
@@ -105,7 +105,7 @@ function MemberForm({
   const [formData, setFormData] = useState<MemberFormData>({
     name: initialData?.name || '',
     title: initialData?.title || '',
-    department: initialData?.department || '技术部',
+    department: initialData?.department || 'Technology',
     avatar: initialData?.avatar || '👤',
     email: initialData?.email || '',
     parentId: initialData?.parentId || '',
@@ -118,9 +118,9 @@ function MemberForm({
 
   return (
     <form onSubmit={handleSubmit} className="space-y-4">
-      {/* 头像选择 */}
+      {/* Avatar Selection */}
       <div>
-        <label className="block text-sm font-medium mb-2">头像</label>
+        <label className="block text-sm font-medium mb-2">Avatar</label>
         <div className="flex flex-wrap gap-2">
           {avatarOptions.map((avatar) => (
             <button
@@ -139,35 +139,35 @@ function MemberForm({
         </div>
       </div>
 
-      {/* 姓名 */}
+      {/* Name */}
       <div>
-        <label className="block text-sm font-medium mb-1">姓名 *</label>
+        <label className="block text-sm font-medium mb-1">Name *</label>
         <input
           type="text"
           required
           value={formData.name}
           onChange={(e) => setFormData(prev => ({ ...prev, name: e.target.value }))}
           className="w-full px-3 py-2 rounded-lg border border-border bg-background focus:border-primary focus:ring-1 focus:ring-primary outline-none"
-          placeholder="请输入姓名"
+          placeholder="Enter name"
         />
       </div>
 
-      {/* 职位 */}
+      {/* Title */}
       <div>
-        <label className="block text-sm font-medium mb-1">职位 *</label>
+        <label className="block text-sm font-medium mb-1">Title *</label>
         <input
           type="text"
           required
           value={formData.title}
           onChange={(e) => setFormData(prev => ({ ...prev, title: e.target.value }))}
           className="w-full px-3 py-2 rounded-lg border border-border bg-background focus:border-primary focus:ring-1 focus:ring-primary outline-none"
-          placeholder="请输入职位"
+          placeholder="Enter title"
         />
       </div>
 
-      {/* 部门 */}
+      {/* Department */}
       <div>
-        <label className="block text-sm font-medium mb-1">部门 *</label>
+        <label className="block text-sm font-medium mb-1">Department *</label>
         <select
           required
           value={formData.department}
@@ -180,9 +180,9 @@ function MemberForm({
         </select>
       </div>
 
-      {/* 邮箱 */}
+      {/* Email */}
       <div>
-        <label className="block text-sm font-medium mb-1">邮箱</label>
+        <label className="block text-sm font-medium mb-1">Email</label>
         <input
           type="email"
           value={formData.email}
@@ -192,17 +192,17 @@ function MemberForm({
         />
       </div>
 
-      {/* 上级（仅新增时显示） */}
+      {/* Superior (Only for new member) */}
       {!isEdit && (
         <div>
-          <label className="block text-sm font-medium mb-1">上级 *</label>
+          <label className="block text-sm font-medium mb-1">Superior *</label>
           <select
             required
             value={formData.parentId}
             onChange={(e) => setFormData(prev => ({ ...prev, parentId: e.target.value }))}
             className="w-full px-3 py-2 rounded-lg border border-border bg-background focus:border-primary focus:ring-1 focus:ring-primary outline-none"
           >
-            <option value="">请选择上级</option>
+            <option value="">Select Superior</option>
             {parentOptions.map(p => (
               <option key={p.id} value={p.id}>{p.name} - {p.title}</option>
             ))}
@@ -210,28 +210,28 @@ function MemberForm({
         </div>
       )}
 
-      {/* 按钮 */}
+      {/* Buttons */}
       <div className="flex gap-3 pt-2">
         <button
           type="button"
           onClick={onCancel}
           className="flex-1 px-4 py-2 rounded-lg border border-border text-muted-foreground hover:bg-muted transition-colors"
         >
-          取消
+          Cancel
         </button>
         <button
           type="submit"
           className="flex-1 px-4 py-2 rounded-lg bg-primary text-primary-foreground hover:bg-primary/90 transition-colors flex items-center justify-center gap-2"
         >
           <Check className="w-4 h-4" />
-          {isEdit ? '保存' : '添加'}
+          {isEdit ? 'Save' : 'Add'}
         </button>
       </div>
     </form>
   )
 }
 
-// ===== 自定义节点组件 =====
+// ===== Custom Node Component =====
 interface OrgNodeData {
   orgNode: OrgNode
   isRoot: boolean
@@ -257,14 +257,14 @@ const OrgNodeComponent = memo(({ data }: NodeProps<OrgNodeData>) => {
       onMouseEnter={() => setShowActions(true)}
       onMouseLeave={() => setShowActions(false)}
     >
-      {/* 上方连接点 */}
+      {/* Top Handle */}
       <Handle
         type="target"
         position={Position.Top}
         className="!w-3 !h-3 !bg-primary/50 !border-2 !border-primary"
       />
 
-      {/* 节点卡片 */}
+      {/* Node Card */}
       <div
         className={`
           relative flex flex-col items-center p-4 rounded-xl border-2 
@@ -275,20 +275,20 @@ const OrgNodeComponent = memo(({ data }: NodeProps<OrgNodeData>) => {
           ${data.isMovingOver ? 'ring-4 ring-emerald-500 scale-105 border-emerald-500 shadow-2xl z-50' : ''}
         `}
       >
-        {/* 操作按钮 */}
+        {/* Action Buttons */}
         {showActions && (
           <div className="absolute -top-3 -right-3 flex gap-1 z-10">
             <button
               onClick={() => onAdd(orgNode.id)}
               className="p-1.5 bg-emerald-500 text-white rounded-full shadow-md hover:bg-emerald-600 transition-colors"
-              title="添加下属"
+              title="Add Subordinate"
             >
               <Plus className="w-3 h-3" />
             </button>
             <button
               onClick={() => onEdit(orgNode)}
               className="p-1.5 bg-blue-500 text-white rounded-full shadow-md hover:bg-blue-600 transition-colors"
-              title="编辑"
+              title="Edit"
             >
               <Edit2 className="w-3 h-3" />
             </button>
@@ -296,7 +296,7 @@ const OrgNodeComponent = memo(({ data }: NodeProps<OrgNodeData>) => {
               <button
                 onClick={() => onDelete(orgNode)}
                 className="p-1.5 bg-red-500 text-white rounded-full shadow-md hover:bg-red-600 transition-colors"
-                title="删除"
+                title="Delete"
               >
                 <Trash2 className="w-3 h-3" />
               </button>
@@ -304,12 +304,12 @@ const OrgNodeComponent = memo(({ data }: NodeProps<OrgNodeData>) => {
           </div>
         )}
 
-        {/* 头像 */}
+        {/* Avatar */}
         <div className="w-14 h-14 rounded-full flex items-center justify-center text-3xl mb-2 bg-white/80 shadow-inner">
           {orgNode.avatar}
         </div>
 
-        {/* 信息 */}
+        {/* Info */}
         <div className="text-center">
           <div className="font-semibold text-foreground text-sm">{orgNode.name}</div>
           <div className={`text-xs font-medium mt-0.5 ${colors.text}`}>{orgNode.title}</div>
@@ -317,11 +317,9 @@ const OrgNodeComponent = memo(({ data }: NodeProps<OrgNodeData>) => {
             {orgNode.department}
           </div>
         </div>
-
-
       </div>
 
-      {/* 下方连接点 */}
+      {/* Bottom Handle */}
       <Handle
         type="source"
         position={Position.Bottom}
@@ -331,11 +329,9 @@ const OrgNodeComponent = memo(({ data }: NodeProps<OrgNodeData>) => {
   )
 })
 
-
 OrgNodeComponent.displayName = 'OrgNodeComponent'
 
-
-// ===== React Flow 组织架构图主组件 =====
+// ===== React Flow Org Chart Internal Component =====
 interface ReactFlowOrgChartProps {
   orgTree: OrgNode
   onAdd: (parentId: string) => void
@@ -354,7 +350,7 @@ function ReactFlowOrgChartInternal({
   const { getNodes } = useReactFlow()
   const [hoveredNodeId, setHoveredNodeId] = useState<string | null>(null)
 
-  // 转换函数
+  // Transformation function
   const convertToFlow = useCallback((): { nodes: Node<OrgNodeData>[]; edges: Edge[] } => {
     const nodes: Node<OrgNodeData>[] = []
     const edges: Edge[] = []
@@ -386,7 +382,7 @@ function ReactFlowOrgChartInternal({
           onAdd,
           isMovingOver: hoveredNodeId === node.id
         },
-        draggable: !isRoot, // 根节点不可移动
+        draggable: !isRoot, // Root node is not draggable
       })
 
       if (node.children && node.children.length > 0) {
@@ -428,19 +424,19 @@ function ReactFlowOrgChartInternal({
   const [nodes, setNodes, onNodesChange] = useNodesState(initialNodes)
   const [edges, setEdges, onEdgesChange] = useEdgesState(initialEdges)
 
-  // 使用 useMemo 缓存 nodeTypes
+  // Use useMemo to cache nodeTypes
   const nodeTypes = useMemo(() => ({
     orgNode: OrgNodeComponent,
   }), [])
 
-  // 当 orgTree 或 hoveredNodeId 变化时更新
+  // Update when orgTree or hoveredNodeId changes
   useEffect(() => {
     const { nodes: newNodes, edges: newEdges } = convertToFlow()
     setNodes(newNodes)
     setEdges(newEdges)
   }, [orgTree, hoveredNodeId, convertToFlow, setNodes, setEdges])
 
-  // 处理拖拽中
+  // Handle dragging
   const onNodeDrag = useCallback((_: any, node: Node) => {
     const allNodes = getNodes()
     const found = allNodes.find((n) => {
@@ -457,17 +453,17 @@ function ReactFlowOrgChartInternal({
     setHoveredNodeId(found ? found.id : null)
   }, [getNodes])
 
-  // 处理拖拽停止
+  // Handle drag stop
   const onNodeDragStop = useCallback((_: any, node: Node) => {
     const allNodes = getNodes()
     setHoveredNodeId(null)
     
-    // 查找当前节点中心点所在的节点
+    // Find node under current node center
     const droppedOnNode = allNodes.find((n) => {
       if (n.id === node.id) return false
       
-      const x = node.position.x + 90 // 节点半宽
-      const y = node.position.y + 70 // 节点半高
+      const x = node.position.x + 90 // Half width
+      const y = node.position.y + 70 // Half height
       
       return (
         x >= n.position.x &&
@@ -480,7 +476,7 @@ function ReactFlowOrgChartInternal({
     if (droppedOnNode) {
       onMove(node.id, droppedOnNode.id)
     } else {
-      // 如果没掉到任何节点上，重置位置（通过重新转换数据）
+      // Reset position if not dropped on any node
       const { nodes: resetNodes } = convertToFlow()
       setNodes(resetNodes)
     }
@@ -503,7 +499,7 @@ function ReactFlowOrgChartInternal({
         defaultViewport={{ x: 0, y: 0, zoom: 0.8 }}
         attributionPosition="bottom-left"
         nodesDraggable={true}
-        panOnDrag={true} // 启用左键在背景处拖拽平移
+        panOnDrag={true} 
         selectionKeyCode={null}
       >
         <Controls 
@@ -518,9 +514,9 @@ function ReactFlowOrgChartInternal({
         />
       </ReactFlow>
       
-      {/* 提示 */}
+      {/* Tips */}
       <div className="absolute bottom-4 left-4 px-3 py-2 bg-white/90 rounded-lg shadow text-xs text-muted-foreground">
-        💡 直接拖动<span className="text-primary font-medium">节点卡片</span>到目标节点上即可移动人员关系
+        💡 Directly drag <span className="text-primary font-medium">node card</span> to target node to move member relationship
       </div>
     </div>
   )

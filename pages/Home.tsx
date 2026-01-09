@@ -14,7 +14,7 @@ import {
 } from 'lucide-react'
 import { ReactFlowOrgChart } from './components/ReactFlowOrgChart'
 
-// 组织节点类型
+// Org Node Type
 interface OrgNode {
   id: string
   name: string
@@ -26,7 +26,7 @@ interface OrgNode {
   children?: OrgNode[]
 }
 
-// 用户类型
+// User Type
 interface User {
   id: string
   name: string
@@ -36,7 +36,7 @@ interface User {
   title: string
 }
 
-// 表单数据类型
+// Form Data Type
 interface MemberFormData {
   name: string
   title: string
@@ -46,16 +46,16 @@ interface MemberFormData {
   parentId: string
 }
 
-// 视图类型
+// View Type
 type ViewMode = 'tree' | 'grid' | 'list' | 'department'
 
-// 可用头像
+// Available Avatars
 const avatarOptions = ['👨‍💼', '👩‍💼', '👨‍💻', '👩‍💻', '🧑‍💻', '👨‍🎨', '👩‍🎨', '📊', '📋', '🎨', '🖌️', '👤', '👥']
 
-// 部门选项
-const departmentOptions = ['总裁办', '技术部', '产品部', '设计部', '市场部', '人事部', '财务部']
+// Department Options
+const departmentOptions = ['Executive Office', 'Technology', 'Product', 'Design', 'Marketing', 'HR', 'Finance']
 
-// ===== 弹窗组件 =====
+// ===== Modal Component =====
 function Modal({ 
   isOpen, 
   onClose, 
@@ -87,7 +87,7 @@ function Modal({
   )
 }
 
-// ===== 成员表单组件 =====
+// ===== Member Form Component =====
 function MemberForm({
   initialData,
   parentOptions,
@@ -104,7 +104,7 @@ function MemberForm({
   const [formData, setFormData] = useState<MemberFormData>({
     name: initialData?.name || '',
     title: initialData?.title || '',
-    department: initialData?.department || '技术部',
+    department: initialData?.department || 'Technology',
     avatar: initialData?.avatar || '👤',
     email: initialData?.email || '',
     parentId: initialData?.parentId || '',
@@ -117,9 +117,9 @@ function MemberForm({
 
   return (
     <form onSubmit={handleSubmit} className="space-y-4">
-      {/* 头像选择 */}
+      {/* Avatar Selection */}
       <div>
-        <label className="block text-sm font-medium mb-2">头像</label>
+        <label className="block text-sm font-medium mb-2">Avatar</label>
         <div className="flex flex-wrap gap-2">
           {avatarOptions.map((avatar) => (
             <button
@@ -138,35 +138,35 @@ function MemberForm({
         </div>
       </div>
 
-      {/* 姓名 */}
+      {/* Name */}
       <div>
-        <label className="block text-sm font-medium mb-1">姓名 *</label>
+        <label className="block text-sm font-medium mb-1">Name *</label>
         <input
           type="text"
           required
           value={formData.name}
           onChange={(e) => setFormData(prev => ({ ...prev, name: e.target.value }))}
           className="w-full px-3 py-2 rounded-lg border border-border bg-background focus:border-primary focus:ring-1 focus:ring-primary outline-none"
-          placeholder="请输入姓名"
+          placeholder="Enter name"
         />
       </div>
 
-      {/* 职位 */}
+      {/* Title */}
       <div>
-        <label className="block text-sm font-medium mb-1">职位 *</label>
+        <label className="block text-sm font-medium mb-1">Title *</label>
         <input
           type="text"
           required
           value={formData.title}
           onChange={(e) => setFormData(prev => ({ ...prev, title: e.target.value }))}
           className="w-full px-3 py-2 rounded-lg border border-border bg-background focus:border-primary focus:ring-1 focus:ring-primary outline-none"
-          placeholder="请输入职位"
+          placeholder="Enter title"
         />
       </div>
 
-      {/* 部门 */}
+      {/* Department */}
       <div>
-        <label className="block text-sm font-medium mb-1">部门 *</label>
+        <label className="block text-sm font-medium mb-1">Department *</label>
         <select
           required
           value={formData.department}
@@ -179,9 +179,9 @@ function MemberForm({
         </select>
       </div>
 
-      {/* 邮箱 */}
+      {/* Email */}
       <div>
-        <label className="block text-sm font-medium mb-1">邮箱</label>
+        <label className="block text-sm font-medium mb-1">Email</label>
         <input
           type="email"
           value={formData.email}
@@ -191,17 +191,17 @@ function MemberForm({
         />
       </div>
 
-      {/* 上级（仅新增时显示） */}
+      {/* Superior (Only for new member) */}
       {!isEdit && (
         <div>
-          <label className="block text-sm font-medium mb-1">上级 *</label>
+          <label className="block text-sm font-medium mb-1">Superior *</label>
           <select
             required
             value={formData.parentId}
             onChange={(e) => setFormData(prev => ({ ...prev, parentId: e.target.value }))}
             className="w-full px-3 py-2 rounded-lg border border-border bg-background focus:border-primary focus:ring-1 focus:ring-primary outline-none"
           >
-            <option value="">请选择上级</option>
+            <option value="">Select Superior</option>
             {parentOptions.map(p => (
               <option key={p.id} value={p.id}>{p.name} - {p.title}</option>
             ))}
@@ -209,28 +209,28 @@ function MemberForm({
         </div>
       )}
 
-      {/* 按钮 */}
+      {/* Buttons */}
       <div className="flex gap-3 pt-2">
         <button
           type="button"
           onClick={onCancel}
           className="flex-1 px-4 py-2 rounded-lg border border-border text-muted-foreground hover:bg-muted transition-colors"
         >
-          取消
+          Cancel
         </button>
         <button
           type="submit"
           className="flex-1 px-4 py-2 rounded-lg bg-primary text-primary-foreground hover:bg-primary/90 transition-colors flex items-center justify-center gap-2"
         >
           <Check className="w-4 h-4" />
-          {isEdit ? '保存' : '添加'}
+          {isEdit ? 'Save' : 'Add'}
         </button>
       </div>
     </form>
   )
 }
 
-// ===== 视图切换组件 =====
+// ===== View Toggle Component =====
 function ViewToggle({ 
   currentView, 
   onViewChange 
@@ -239,10 +239,10 @@ function ViewToggle({
   onViewChange: (view: ViewMode) => void 
 }) {
   const views: { id: ViewMode; icon: typeof Network; label: string }[] = [
-    { id: 'tree', icon: Network, label: '树形图' },
-    { id: 'grid', icon: LayoutGrid, label: '卡片视图' },
-    { id: 'list', icon: List, label: '列表视图' },
-    { id: 'department', icon: Building2, label: '部门视图' },
+    { id: 'tree', icon: Network, label: 'Tree' },
+    { id: 'grid', icon: LayoutGrid, label: 'Grid' },
+    { id: 'list', icon: List, label: 'List' },
+    { id: 'department', icon: Building2, label: 'Department' },
   ]
 
   return (
@@ -268,7 +268,7 @@ function ViewToggle({
 }
 
 
-// ===== 卡片网格视图 =====
+// ===== Grid View =====
 function GridView({ 
   nodes, 
   onEdit, 
@@ -295,7 +295,7 @@ function GridView({
           key={node.id}
           className="relative p-4 rounded-xl border border-border/60 bg-card hover:bg-accent/50 hover:border-primary/30 transition-all duration-200 hover:shadow-md text-center group"
         >
-          {/* 操作按钮 */}
+          {/* Action Buttons */}
           <div className="absolute top-2 right-2 flex gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
             <button
               onClick={() => onEdit(node)}
@@ -327,7 +327,7 @@ function GridView({
   )
 }
 
-// ===== 列表视图 =====
+// ===== List View =====
 function ListView({ 
   nodes, 
   onEdit, 
@@ -352,11 +352,11 @@ function ListView({
       <table className="w-full">
         <thead className="bg-muted/50">
           <tr>
-            <th className="text-left px-4 py-3 text-sm font-medium text-muted-foreground">员工</th>
-            <th className="text-left px-4 py-3 text-sm font-medium text-muted-foreground">职位</th>
-            <th className="text-left px-4 py-3 text-sm font-medium text-muted-foreground">部门</th>
-            <th className="text-left px-4 py-3 text-sm font-medium text-muted-foreground">层级</th>
-            <th className="text-right px-4 py-3 text-sm font-medium text-muted-foreground">操作</th>
+            <th className="text-left px-4 py-3 text-sm font-medium text-muted-foreground">Employee</th>
+            <th className="text-left px-4 py-3 text-sm font-medium text-muted-foreground">Title</th>
+            <th className="text-left px-4 py-3 text-sm font-medium text-muted-foreground">Department</th>
+            <th className="text-left px-4 py-3 text-sm font-medium text-muted-foreground">Level</th>
+            <th className="text-right px-4 py-3 text-sm font-medium text-muted-foreground">Actions</th>
           </tr>
         </thead>
         <tbody className="divide-y divide-border/60">
@@ -401,7 +401,7 @@ function ListView({
   )
 }
 
-// ===== 部门分组视图 =====
+// ===== Department View =====
 function DepartmentView({ nodes }: { nodes: OrgNode[] }) {
   const flattenNodes = (node: OrgNode): OrgNode[] => {
     const result = [node]
@@ -420,10 +420,10 @@ function DepartmentView({ nodes }: { nodes: OrgNode[] }) {
   }, {} as Record<string, OrgNode[]>)
 
   const deptColors: Record<string, string> = {
-    '总裁办': 'from-amber-500/20 to-amber-500/5 border-amber-500/30',
-    '技术部': 'from-blue-500/20 to-blue-500/5 border-blue-500/30',
-    '产品部': 'from-emerald-500/20 to-emerald-500/5 border-emerald-500/30',
-    '设计部': 'from-purple-500/20 to-purple-500/5 border-purple-500/30',
+    'Executive Office': 'from-amber-500/20 to-amber-500/5 border-amber-500/30',
+    'Technology': 'from-blue-500/20 to-blue-500/5 border-blue-500/30',
+    'Product': 'from-emerald-500/20 to-emerald-500/5 border-emerald-500/30',
+    'Design': 'from-purple-500/20 to-purple-500/5 border-purple-500/30',
   }
 
   return (
@@ -437,7 +437,7 @@ function DepartmentView({ nodes }: { nodes: OrgNode[] }) {
             <Building2 className="h-5 w-5 text-foreground/70" />
             <h3 className="font-bold text-lg">{dept}</h3>
             <span className="ml-auto px-2 py-1 rounded-full bg-background/60 text-xs font-medium">
-              {members.length} 人
+              {members.length} {members.length === 1 ? 'Person' : 'People'}
             </span>
           </div>
           <div className="space-y-2">
@@ -460,7 +460,7 @@ function DepartmentView({ nodes }: { nodes: OrgNode[] }) {
   )
 }
 
-// ===== 主组件 =====
+// ===== Main Component =====
 export function Home() {
   const navigate = useNavigate()
   const [user, setUser] = useState<User | null>(null)
@@ -470,7 +470,7 @@ export function Home() {
   const [viewMode, setViewMode] = useState<ViewMode>('tree')
   const [totalMembers, setTotalMembers] = useState(0)
 
-  // 弹窗状态
+  // Modal State
   const [showAddModal, setShowAddModal] = useState(false)
   const [showEditModal, setShowEditModal] = useState(false)
   const [showDeleteModal, setShowDeleteModal] = useState(false)
@@ -478,7 +478,7 @@ export function Home() {
   const [selectedParentId, setSelectedParentId] = useState<string>('')
   const [actionLoading, setActionLoading] = useState(false)
 
-  // 获取所有成员作为上级选项
+  // Get all members as superior options
   const getParentOptions = useCallback((tree: OrgNode | null): { id: string; name: string; title: string }[] => {
     if (!tree) return []
     const options: { id: string; name: string; title: string }[] = []
@@ -490,21 +490,21 @@ export function Home() {
     return options
   }, [])
 
-  // 加载数据
+  // Load Data
   const loadData = useCallback(async () => {
     try {
       const res = await $fetch('./api/org/tree')
-      if (!res.ok) throw new Error('加载失败')
+      if (!res.ok) throw new Error('Load failed')
       
       const data = await res.json()
       if (data.success) {
         setOrgTree(data.tree)
         setTotalMembers(data.stats?.total || 0)
       } else {
-        setError(data.error || '加载组织架构失败')
+        setError(data.error || 'Failed to load organization chart')
       }
     } catch (err) {
-      setError(err instanceof Error ? err.message : '加载失败')
+      setError(err instanceof Error ? err.message : 'Load failed')
     }
   }, [])
 
@@ -532,7 +532,7 @@ export function Home() {
     navigate('/login')
   }, [navigate])
 
-  // 添加成员
+  // Add Member
   const handleAdd = (parentId: string) => {
     setSelectedParentId(parentId)
     setShowAddModal(true)
@@ -551,16 +551,16 @@ export function Home() {
         await loadData()
         setShowAddModal(false)
       } else {
-        alert(result.error || '添加失败')
+        alert(result.error || 'Add failed')
       }
     } catch {
-      alert('添加失败')
+      alert('Add failed')
     } finally {
       setActionLoading(false)
     }
   }
 
-  // 编辑成员
+  // Edit Member
   const handleEdit = (node: OrgNode) => {
     setSelectedNode(node)
     setShowEditModal(true)
@@ -581,16 +581,16 @@ export function Home() {
         setShowEditModal(false)
         setSelectedNode(null)
       } else {
-        alert(result.error || '更新失败')
+        alert(result.error || 'Update failed')
       }
     } catch {
-      alert('更新失败')
+      alert('Update failed')
     } finally {
       setActionLoading(false)
     }
   }
 
-  // 删除成员
+  // Delete Member
   const handleDelete = (node: OrgNode) => {
     setSelectedNode(node)
     setShowDeleteModal(true)
@@ -609,10 +609,10 @@ export function Home() {
         setShowDeleteModal(false)
         setSelectedNode(null)
       } else {
-        alert(result.error || '删除失败')
+        alert(result.error || 'Delete failed')
       }
     } catch {
-      alert('删除失败')
+      alert('Delete failed')
     } finally {
       setActionLoading(false)
     }
@@ -630,21 +630,19 @@ export function Home() {
       if (result.success) {
         await loadData()
       } else {
-        alert(result.error || '移动失败')
+        alert(result.error || 'Move failed')
       }
     } catch {
-      alert('移动失败')
+      alert('Move failed')
     }
   }, [loadData])
-
-
 
   if (loading) {
     return (
       <div className="min-h-screen bg-gradient-to-b from-background to-muted/20 flex items-center justify-center">
         <div className="flex items-center gap-3 rounded-xl border border-border/60 bg-card/90 px-5 py-4 shadow-lg">
           <Spinner className="h-5 w-5 text-primary" />
-          <span className="text-sm text-muted-foreground">加载中...</span>
+          <span className="text-sm text-muted-foreground">Loading...</span>
         </div>
       </div>
     )
@@ -652,7 +650,7 @@ export function Home() {
 
   const renderView = () => {
     if (!orgTree) {
-      return <div className="text-center py-12 text-muted-foreground">暂无组织架构数据</div>
+      return <div className="text-center py-12 text-muted-foreground">No organization data available</div>
     }
 
     switch (viewMode) {
@@ -686,17 +684,17 @@ export function Home() {
   }
 
   return (
-    <div className="min-h-screen bg-gradient-to-b from-background to-muted/20 p-6">
-      <div className="max-w-6xl mx-auto space-y-6">
-        {/* 顶部栏 */}
+    <div className="min-h-screen bg-gradient-to-b from-background to-muted/20 p-4 sm:p-6">
+      <div className="w-full space-y-6">
+        {/* Header */}
         <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
           <div className="flex items-center gap-3">
             <div className="h-10 w-10 rounded-lg bg-primary/10 flex items-center justify-center">
               <Users className="h-5 w-5 text-primary" />
             </div>
             <div>
-              <h1 className="text-xl font-bold">组织架构</h1>
-              <p className="text-sm text-muted-foreground">Contoso 公司人员结构图</p>
+              <h1 className="text-xl font-bold">Organization Chart</h1>
+              <p className="text-sm text-muted-foreground">Contoso Corporate Structure</p>
             </div>
           </div>
 
@@ -707,7 +705,7 @@ export function Home() {
                 className="flex items-center gap-2 px-4 py-2 rounded-lg bg-primary text-primary-foreground hover:bg-primary/90 transition-colors"
               >
                 <UserPlus className="h-4 w-4" />
-                添加成员
+                Add Member
               </button>
               <div className="flex items-center gap-3 px-4 py-2 rounded-lg bg-card border border-border/60">
                 <span className="text-2xl">{user.avatar}</span>
@@ -721,7 +719,7 @@ export function Home() {
                 className="flex items-center gap-2 px-3 py-2 rounded-lg text-sm text-muted-foreground hover:text-foreground hover:bg-muted transition-colors"
               >
                 <LogOut className="h-4 w-4" />
-                退出
+                Logout
               </button>
             </div>
           )}
@@ -733,14 +731,14 @@ export function Home() {
           </div>
         )}
 
-        {/* 组织架构图 */}
+        {/* Org Chart Card */}
         <Card className="border-border/60 shadow-lg">
           <CardHeader className="pb-4">
             <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
               <CardTitle className="flex items-center gap-2">
                 <span className="text-2xl">🏢</span>
-                组织架构图
-                <span className="text-sm font-normal text-muted-foreground ml-2">共 {totalMembers} 人</span>
+                Org Chart
+                <span className="text-sm font-normal text-muted-foreground ml-2">Total {totalMembers} members</span>
               </CardTitle>
               <ViewToggle currentView={viewMode} onViewChange={setViewMode} />
             </div>
@@ -753,8 +751,8 @@ export function Home() {
         </Card>
       </div>
 
-      {/* 添加成员弹窗 */}
-      <Modal isOpen={showAddModal} onClose={() => setShowAddModal(false)} title="添加成员">
+      {/* Add Member Modal */}
+      <Modal isOpen={showAddModal} onClose={() => setShowAddModal(false)} title="Add Member">
         <MemberForm
           initialData={{ parentId: selectedParentId }}
           parentOptions={getParentOptions(orgTree)}
@@ -763,8 +761,8 @@ export function Home() {
         />
       </Modal>
 
-      {/* 编辑成员弹窗 */}
-      <Modal isOpen={showEditModal} onClose={() => { setShowEditModal(false); setSelectedNode(null) }} title="编辑成员">
+      {/* Edit Member Modal */}
+      <Modal isOpen={showEditModal} onClose={() => { setShowEditModal(false); setSelectedNode(null) }} title="Edit Member">
         {selectedNode && (
           <MemberForm
             initialData={{
@@ -782,25 +780,25 @@ export function Home() {
         )}
       </Modal>
 
-      {/* 删除确认弹窗 */}
-      <Modal isOpen={showDeleteModal} onClose={() => { setShowDeleteModal(false); setSelectedNode(null) }} title="删除确认">
+      {/* Delete Confirmation Modal */}
+      <Modal isOpen={showDeleteModal} onClose={() => { setShowDeleteModal(false); setSelectedNode(null) }} title="Confirm Delete">
         <div className="space-y-4">
           <p className="text-muted-foreground">
-            确定要删除 <span className="font-semibold text-foreground">{selectedNode?.name}</span> 吗？此操作不可撤销。
+            Are you sure you want to delete <span className="font-semibold text-foreground">{selectedNode?.name}</span>? This action cannot be undone.
           </p>
           <div className="flex gap-3">
             <button
               onClick={() => { setShowDeleteModal(false); setSelectedNode(null) }}
               className="flex-1 px-4 py-2 rounded-lg border border-border text-muted-foreground hover:bg-muted transition-colors"
             >
-              取消
+              Cancel
             </button>
             <button
               onClick={handleDeleteConfirm}
               disabled={actionLoading}
               className="flex-1 px-4 py-2 rounded-lg bg-red-500 text-white hover:bg-red-600 transition-colors disabled:opacity-50"
             >
-              {actionLoading ? '删除中...' : '确认删除'}
+              {actionLoading ? 'Deleting...' : 'Confirm'}
             </button>
           </div>
         </div>

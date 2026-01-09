@@ -82,13 +82,13 @@
     "menus": [
       {
         "name": "login",
-        "label": "登录",
+        "label": "Login",
         "path": "/login",
         "icon": "LogIn"
       },
       {
         "name": "home",
-        "label": "组织架构",
+        "label": "Organization",
         "path": "/",
         "icon": "Network"
       }

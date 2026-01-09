@@ -40,23 +40,23 @@ const pageModules = import.meta.glob('./pages/**/*.tsx')
 const NotFoundPage = lazyPage(() => import('./pages/NotFound'), 'NotFound')
 
 /**
- * 将 name 转换为组件名称（首字母大写）
- * 例如: "home" -> "Home"
+ * Converts name to component name (PascalCase)
+ * e.g., "home" -> "Home"
  */
 function toComponentName(name: string): string {
   return name.charAt(0).toUpperCase() + name.slice(1)
 }
 
 /**
- * 从 name 推断 componentPath
- * 例如: "home" -> "Home.tsx"
+ * Infers componentPath from name
+ * e.g., "home" -> "Home.tsx"
  */
 function getComponentPath(name: string): string {
   return `${toComponentName(name)}.tsx`
 }
 
 /**
- * 从 path 推断 routePath 和 isIndex
+ * Infers routePath and isIndex from path
  */
 function getRouteInfo(path: string): { routePath: string; isIndex: boolean } {
   if (path === '/') {
@@ -70,14 +70,14 @@ function App() {
   const [loading, setLoading] = React.useState(true)
 
   React.useEffect(() => {
-    // 优先从 window.__MANIFEST__ 获取（build 模式）
+    // Priority: Fetch from window.__MANIFEST__ (build mode)
     if (window.__MANIFEST__?.menus) {
       setRouteMetas(window.__MANIFEST__.menus as RouteMeta[])
       setLoading(false)
       return
     }
     
-    // 降级到 fetch（dev 模式）
+    // Fallback to fetch (dev mode)
     fetch('/manifest.json')
       .then(res => res.json())
       .then(data => {
@@ -94,7 +94,7 @@ function App() {
   const pages: PageConfig[] = React.useMemo(() => {
     return routeMetas
       .map((meta): PageConfig | null => {
-        // 从 name 推断 componentPath 和 exportName
+        // Infer componentPath and exportName from name
         const componentPath = getComponentPath(meta.name)
         const exportName = toComponentName(meta.name)
         const moduleKey = `./pages/${componentPath}`
@@ -105,7 +105,7 @@ function App() {
           return null
         }
 
-        // 从 path 推断 routePath 和 isIndex
+        // Infer routePath and isIndex from path
         const { routePath, isIndex } = getRouteInfo(meta.path)
 
         const iconComponent = meta.icon ? Icons[meta.icon] : undefined

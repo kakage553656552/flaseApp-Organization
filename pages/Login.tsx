@@ -20,30 +20,30 @@ export function Login() {
     setError(null)
     
     try {
-      // 模拟微软 OAuth2 登录
+      // Mock Microsoft OAuth2 login
       const res = await $fetch('./api/auth/login', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ email: null }), // 使用默认用户
+        body: JSON.stringify({ email: null }), // Use default user
       })
       
       if (!res.ok) {
-        throw new Error('登录失败')
+        throw new Error('Login failed')
       }
       
       const data = await res.json()
       
       if (data.success) {
-        // 保存 token 到 localStorage
+        // Save token to localStorage
         localStorage.setItem('accessToken', data.accessToken)
         localStorage.setItem('user', JSON.stringify(data.user))
-        // 跳转到首页
+        // Redirect to home
         navigate('/')
       } else {
-        setError(data.error || '登录失败')
+        setError(data.error || 'Login failed')
       }
     } catch (err) {
-      setError(err instanceof Error ? err.message : '登录失败')
+      setError(err instanceof Error ? err.message : 'Login failed')
     } finally {
       setLoading(false)
     }
@@ -51,7 +51,7 @@ export function Login() {
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-blue-50 via-white to-indigo-50 dark:from-slate-900 dark:via-slate-800 dark:to-slate-900 flex items-center justify-center p-6">
-      {/* 背景装饰 */}
+      {/* Background decorations */}
       <div className="absolute inset-0 overflow-hidden pointer-events-none">
         <div className="absolute -top-40 -right-40 w-80 h-80 bg-blue-400/20 rounded-full blur-3xl" />
         <div className="absolute -bottom-40 -left-40 w-80 h-80 bg-indigo-400/20 rounded-full blur-3xl" />
@@ -70,9 +70,9 @@ export function Login() {
           </div>
           
           <div className="space-y-2">
-            <CardTitle className="text-2xl font-semibold">登录到您的账户</CardTitle>
+            <CardTitle className="text-2xl font-semibold">Login to your account</CardTitle>
             <CardDescription className="text-base">
-              使用 Microsoft 账户登录以访问组织架构
+              Login with your Microsoft account to access the organization chart
             </CardDescription>
           </div>
         </CardHeader>
@@ -92,7 +92,7 @@ export function Login() {
             {loading ? (
               <>
                 <Spinner className="h-5 w-5" />
-                <span>登录中...</span>
+                <span>Logging in...</span>
               </>
             ) : (
               <>
@@ -103,7 +103,7 @@ export function Login() {
                   <rect x="1" y="11" width="9" height="9" fill="#00a4ef" />
                   <rect x="11" y="11" width="9" height="9" fill="#ffb900" />
                 </svg>
-                <span>使用 Microsoft 账户登录</span>
+                <span>Login with Microsoft account</span>
               </>
             )}
           </button>
@@ -113,21 +113,21 @@ export function Login() {
               <div className="w-full border-t border-border/60" />
             </div>
             <div className="relative flex justify-center text-xs uppercase">
-              <span className="bg-card px-2 text-muted-foreground">或</span>
+              <span className="bg-card px-2 text-muted-foreground">or</span>
             </div>
           </div>
 
           <div className="text-center text-sm text-muted-foreground">
-            <p>这是一个 Mock 演示</p>
-            <p className="mt-1">点击登录将使用模拟数据</p>
+            <p>This is a Mock Demo</p>
+            <p className="mt-1">Click login to use mock data</p>
           </div>
 
           <div className="pt-4 border-t border-border/40">
             <p className="text-xs text-center text-muted-foreground">
-              登录即表示您同意我们的
-              <a href="#" className="text-primary hover:underline mx-1">服务条款</a>
-              和
-              <a href="#" className="text-primary hover:underline mx-1">隐私政策</a>
+              By logging in, you agree to our
+              <a href="#" className="text-primary hover:underline mx-1">Terms of Service</a>
+              and
+              <a href="#" className="text-primary hover:underline mx-1">Privacy Policy</a>
             </p>
           </div>
         </CardContent>
