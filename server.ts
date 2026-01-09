@@ -35,79 +35,98 @@ let currentUser: User | null = null
 // Available avatar list
 const avatarOptions = ['👨‍💼', '👩‍💼', '👨‍💻', '👩‍💻', '🧑‍💻', '👨‍🎨', '👩‍🎨', '📊', '📋', '🎨', '🖌️', '👤', '👥']
 
-// Mock organization chart data (editable)
-let orgData: OrgNode = {
-  id: 'u001',
-  name: 'John Wang',
-  title: 'CEO',
-  department: 'Executive Office',
-  avatar: '👨‍💼',
-  email: 'john.wang@contoso.com',
-  parentId: null,
-  children: [
-    {
-      id: 'u002',
-      name: 'Michael Zhang',
-      title: 'CTO',
-      department: 'Technology',
-      avatar: '👨‍💻',
-      email: 'michael.zhang@contoso.com',
-      parentId: 'u001',
-      children: [
-        {
-          id: 'u003',
-          name: 'Sarah Lee',
-          title: 'Frontend Lead',
-          department: 'Technology',
-          avatar: '👨‍🎨',
-          email: 'sarah.lee@contoso.com',
-          parentId: 'u002',
-          children: [
-            { id: 'u004', name: 'David Wang', title: 'Frontend Engineer', department: 'Technology', avatar: '👩‍💻', email: 'david.wang@contoso.com', parentId: 'u003' },
-            { id: 'u005', name: 'Elena Zhao', title: 'Frontend Engineer', department: 'Technology', avatar: '👨‍💻', email: 'elena.zhao@contoso.com', parentId: 'u003' },
-          ]
-        },
-        {
-          id: 'u006',
-          name: 'Robert Qian',
-          title: 'Backend Lead',
-          department: 'Technology',
-          avatar: '🧑‍💻',
-          email: 'robert.qian@contoso.com',
-          parentId: 'u002',
-          children: [
-            { id: 'u007', name: 'Steve Sun', title: 'Backend Engineer', department: 'Technology', avatar: '👨‍💻', email: 'steve.sun@contoso.com', parentId: 'u006' },
-            { id: 'u008', name: 'Jenny Zhou', title: 'Backend Engineer', department: 'Technology', avatar: '👩‍💻', email: 'jenny.zhou@contoso.com', parentId: 'u006' },
-          ]
-        },
-      ]
-    },
-    {
-      id: 'u009',
-      name: 'Lisa Wu',
-      title: 'Product Director',
-      department: 'Product',
-      avatar: '📊',
-      email: 'lisa.wu@contoso.com',
-      parentId: 'u001',
-      children: [
-        { id: 'u010', name: 'Adam Zheng', title: 'Product Manager', department: 'Product', avatar: '📋', email: 'adam.zheng@contoso.com', parentId: 'u009' },
-      ]
-    },
-    {
-      id: 'u011',
-      name: 'Kevin Feng',
-      title: 'Design Director',
-      department: 'Design',
-      avatar: '🎨',
-      email: 'kevin.feng@contoso.com',
-      parentId: 'u001',
-      children: [
-        { id: 'u012', name: 'Alice Chen', title: 'UI Designer', department: 'Design', avatar: '🖌️', email: 'alice.chen@contoso.com', parentId: 'u011' },
-      ]
-    },
+// Mock data generator
+function generateMockData(count: number = 100): OrgNode {
+  const firstNames = [
+    'James', 'Mary', 'John', 'Patricia', 'Robert', 'Jennifer', 'Michael', 'Linda',
+    'William', 'Elizabeth', 'David', 'Barbara', 'Richard', 'Susan', 'Joseph', 'Jessica',
+    'Thomas', 'Sarah', 'Charles', 'Karen', 'Christopher', 'Nancy', 'Daniel', 'Lisa',
+    'Matthew', 'Betty', 'Anthony', 'Margaret', 'Mark', 'Sandra', 'Donald', 'Ashley',
+    'Steven', 'Kimberly', 'Paul', 'Emily', 'Andrew', 'Donna', 'Joshua', 'Michelle',
+    'Kenneth', 'Carol', 'Kevin', 'Amanda', 'Brian', 'Dorothy', 'George', 'Melissa',
+    'Timothy', 'Deborah', 'Ronald', 'Stephanie', 'Jason', 'Rebecca', 'Edward', 'Sharon',
+    'Jeffrey', 'Laura', 'Ryan', 'Cynthia', 'Jacob', 'Kathleen', 'Gary', 'Amy',
+    'Nicholas', 'Angela', 'Eric', 'Shirley', 'Jonathan', 'Anna', 'Stephen', 'Brenda',
+    'Larry', 'Pamela', 'Justin', 'Emma', 'Scott', 'Nicole', 'Brandon', 'Helen',
+    'Benjamin', 'Samantha', 'Samuel', 'Katherine', 'Frank', 'Christine', 'Gregory', 'Debra',
+    'Raymond', 'Rachel', 'Alexander', 'Carolyn', 'Patrick', 'Janet', 'Jack', 'Virginia',
+    'Dennis', 'Maria', 'Jerry', 'Heather', 'Tyler', 'Diane', 'Aaron', 'Julie'
   ]
+  
+  const lastNames = [
+    'Smith', 'Johnson', 'Williams', 'Brown', 'Jones', 'Garcia', 'Miller', 'Davis',
+    'Rodriguez', 'Martinez', 'Hernandez', 'Lopez', 'Wilson', 'Anderson', 'Thomas', 'Taylor',
+    'Moore', 'Jackson', 'Martin', 'Lee', 'Thompson', 'White', 'Harris', 'Sanchez',
+    'Clark', 'Ramirez', 'Lewis', 'Robinson', 'Walker', 'Young', 'Allen', 'King',
+    'Wright', 'Scott', 'Torres', 'Nguyen', 'Hill', 'Flores', 'Green', 'Adams',
+    'Nelson', 'Baker', 'Hall', 'Rivera', 'Campbell', 'Mitchell', 'Carter', 'Roberts',
+    'Gomez', 'Phillips', 'Evans', 'Turner', 'Diaz', 'Parker', 'Cruz', 'Edwards',
+    'Collins', 'Reyes', 'Stewart', 'Morris', 'Morales', 'Murphy', 'Cook', 'Rogers'
+  ]
+  
+  const departments = [
+    'Executive Office', 'Technology', 'Product', 'Design', 'Marketing', 'Sales',
+    'Operations', 'Finance', 'HR', 'Legal', 'Customer Success', 'Engineering'
+  ]
+  
+  const titles = [
+    'CEO', 'CTO', 'CFO', 'COO', 'VP Engineering', 'VP Product', 'VP Sales', 'VP Marketing',
+    'Director', 'Senior Director', 'Manager', 'Senior Manager', 'Lead', 'Senior Lead',
+    'Engineer', 'Senior Engineer', 'Product Manager', 'Senior Product Manager',
+    'Designer', 'Senior Designer', 'Analyst', 'Senior Analyst', 'Specialist', 'Coordinator'
+  ]
+  
+  const getRandomItem = <T>(arr: T[]): T => arr[Math.floor(Math.random() * arr.length)]
+  const getRandomInt = (min: number, max: number) => Math.floor(Math.random() * (max - min + 1)) + min
+  
+  // Generate flat list of nodes
+  const nodes: OrgNode[] = []
+  let idCounter = 1
+  
+  // Root node (CEO)
+  const root: OrgNode = {
+    id: `u${String(idCounter++).padStart(3, '0')}`,
+    name: `${getRandomItem(firstNames)} ${getRandomItem(lastNames)}`,
+    title: 'CEO',
+    department: 'Executive Office',
+    avatar: getRandomItem(avatarOptions),
+    email: '',
+    parentId: null,
+    children: []
+  }
+  root.email = `${root.name.toLowerCase().replace(' ', '.')}@contoso.com`
+  nodes.push(root)
+  
+  // Generate remaining nodes
+  while (nodes.length < count) {
+    const parent = nodes[getRandomInt(0, Math.min(nodes.length - 1, Math.floor(nodes.length * 0.7)))]
+    const firstName = getRandomItem(firstNames)
+    const lastName = getRandomItem(lastNames)
+    const name = `${firstName} ${lastName}`
+    
+    const node: OrgNode = {
+      id: `u${String(idCounter++).padStart(3, '0')}`,
+      name,
+      title: getRandomItem(titles),
+      department: getRandomItem(departments),
+      avatar: getRandomItem(avatarOptions),
+      email: `${name.toLowerCase().replace(' ', '.')}@contoso.com`,
+      parentId: parent.id,
+      children: []
+    }
+    
+    if (!parent.children) {
+      parent.children = []
+    }
+    parent.children.push(node)
+    nodes.push(node)
+  }
+  
+  return root
 }
+
+// Mock organization chart data (editable)
+let orgData: OrgNode = generateMockData(100)
 
 // Helper: Find node in tree
 function findNode(tree: OrgNode, id: string): OrgNode | null {
