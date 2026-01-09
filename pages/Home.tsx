@@ -9,9 +9,10 @@ import {
 } from '#nexo/ui'
 import { $fetch } from '#nexo/shared'
 import { 
-  LogOut, Users, ChevronDown, ChevronRight, LayoutGrid, List, Network, Building2,
+  LogOut, Users, LayoutGrid, List, Network, Building2,
   Plus, Edit2, Trash2, X, Check, UserPlus
 } from 'lucide-react'
+import { ReactFlowOrgChart } from './components/ReactFlowOrgChart'
 
 // 组织节点类型
 interface OrgNode {
@@ -266,220 +267,6 @@ function ViewToggle({
   )
 }
 
-// ===== 树形节点组件（支持拖拽）=====
-function TreeNodeCard({ 
-  node, 
-  level = 0,
-  onEdit,
-  onDelete,
-  onAdd,
-  onMove,
-  draggedNodeId,
-  setDraggedNodeId,
-}: { 
-  node: OrgNode
-  level?: number
-  onEdit: (node: OrgNode) => void
-  onDelete: (node: OrgNode) => void
-  onAdd: (parentId: string) => void
-  onMove: (nodeId: string, newParentId: string) => void
-  draggedNodeId: string | null
-  setDraggedNodeId: (id: string | null) => void
-}) {
-  const [expanded, setExpanded] = useState(true)
-  const [showActions, setShowActions] = useState(false)
-  const [isDragOver, setIsDragOver] = useState(false)
-  const hasChildren = node.children && node.children.length > 0
-
-  // 检查是否可以放置到此节点（不能放到自己身上）
-  const canDrop = draggedNodeId !== null && draggedNodeId !== node.id
-
-  // 拖拽开始
-  const handleDragStart = (e: React.DragEvent) => {
-    if (level === 0) {
-      e.preventDefault()
-      return
-    }
-    e.dataTransfer.effectAllowed = 'move'
-    e.dataTransfer.setData('text/plain', node.id)
-    // 延迟设置，让浏览器先捕获元素
-    setTimeout(() => setDraggedNodeId(node.id), 0)
-  }
-
-  // 拖拽结束
-  const handleDragEnd = () => {
-    setDraggedNodeId(null)
-    setIsDragOver(false)
-  }
-
-  // 拖拽经过
-  const handleDragOver = (e: React.DragEvent) => {
-    e.preventDefault()
-    e.stopPropagation()
-    if (canDrop) {
-      e.dataTransfer.dropEffect = 'move'
-      setIsDragOver(true)
-    }
-  }
-
-  // 拖拽离开
-  const handleDragLeave = (e: React.DragEvent) => {
-    e.preventDefault()
-    e.stopPropagation()
-    setIsDragOver(false)
-  }
-
-  // 放置
-  const handleDrop = async (e: React.DragEvent) => {
-    e.preventDefault()
-    e.stopPropagation()
-    
-    const draggedId = e.dataTransfer.getData('text/plain') || draggedNodeId
-    console.log('Drop event:', { draggedId, targetId: node.id })
-    
-    if (draggedId && draggedId !== node.id) {
-      console.log('Calling onMove:', draggedId, '->', node.id)
-      try {
-        await onMove(draggedId, node.id)
-        console.log('onMove completed')
-      } catch (err) {
-        console.error('onMove error:', err)
-      }
-    }
-    
-    setIsDragOver(false)
-    setDraggedNodeId(null)
-  }
-
-  const isDragging = draggedNodeId === node.id
-  const isDropTarget = isDragOver && canDrop
-
-  return (
-    <div className="flex flex-col items-center">
-      <div 
-        className={`
-          relative flex flex-col items-center p-4 rounded-xl border border-border/60 
-          bg-card hover:bg-accent/50 hover:border-primary/30 
-          transition-all duration-200 shadow-sm hover:shadow-md
-          min-w-[160px] max-w-[200px]
-          ${level === 0 ? 'bg-primary/5 border-primary/20 shadow-lg' : ''}
-          ${isDragging ? 'opacity-50 scale-95' : ''}
-          ${isDropTarget ? 'ring-2 ring-primary ring-offset-2 bg-primary/10 border-primary' : ''}
-          ${level > 0 ? 'cursor-grab active:cursor-grabbing' : ''}
-        `}
-        draggable={level > 0}
-        onDragStart={handleDragStart}
-        onDragEnd={handleDragEnd}
-        onDragOver={handleDragOver}
-        onDragLeave={handleDragLeave}
-        onDrop={handleDrop}
-        onMouseEnter={() => setShowActions(true)}
-        onMouseLeave={() => setShowActions(false)}
-      >
-        {/* 拖放提示 */}
-        {isDropTarget && (
-          <div className="absolute inset-0 flex items-center justify-center bg-primary/20 rounded-xl z-20">
-            <span className="text-xs font-medium text-primary px-2 py-1 bg-background rounded-full shadow">
-              放置到此处
-            </span>
-          </div>
-        )}
-
-        {/* 操作按钮 */}
-        {showActions && !draggedNodeId && (
-          <div className="absolute -top-2 -right-2 flex gap-1 z-10">
-            <button
-              onClick={() => onAdd(node.id)}
-              className="p-1.5 bg-emerald-500 text-white rounded-full shadow-md hover:bg-emerald-600 transition-colors"
-              title="添加下属"
-            >
-              <Plus className="w-3 h-3" />
-            </button>
-            <button
-              onClick={() => onEdit(node)}
-              className="p-1.5 bg-blue-500 text-white rounded-full shadow-md hover:bg-blue-600 transition-colors"
-              title="编辑"
-            >
-              <Edit2 className="w-3 h-3" />
-            </button>
-            {level > 0 && (
-              <button
-                onClick={() => onDelete(node)}
-                className="p-1.5 bg-red-500 text-white rounded-full shadow-md hover:bg-red-600 transition-colors"
-                title="删除"
-              >
-                <Trash2 className="w-3 h-3" />
-              </button>
-            )}
-          </div>
-        )}
-
-        {/* 头像 */}
-        <div 
-          className={`
-            w-14 h-14 rounded-full flex items-center justify-center text-3xl mb-2
-            ${level === 0 ? 'bg-primary/10 ring-2 ring-primary/20' : 'bg-muted'}
-            ${level > 0 ? 'pointer-events-none' : 'cursor-pointer'}
-          `}
-          onClick={() => level === 0 && hasChildren && setExpanded(!expanded)}
-        >
-          {node.avatar}
-        </div>
-
-        {/* 信息 */}
-        <div className="text-center pointer-events-none">
-          <div className="font-semibold text-foreground text-sm">{node.name}</div>
-          <div className="text-xs text-primary font-medium mt-0.5">{node.title}</div>
-          <div className="text-xs text-muted-foreground mt-0.5">{node.department}</div>
-        </div>
-
-        {/* 展开/收起指示器 */}
-        {hasChildren && (
-          <button
-            onClick={(e) => { e.stopPropagation(); setExpanded(!expanded) }}
-            className="absolute -bottom-3 left-1/2 -translate-x-1/2 w-6 h-6 rounded-full bg-background border border-border flex items-center justify-center shadow-sm z-10 hover:bg-muted"
-          >
-            {expanded ? (
-              <ChevronDown className="w-3 h-3 text-muted-foreground" />
-            ) : (
-              <ChevronRight className="w-3 h-3 text-muted-foreground" />
-            )}
-          </button>
-        )}
-      </div>
-
-      {/* 子节点 */}
-      {hasChildren && expanded && (
-        <>
-          <div className="w-px h-8 bg-border/60" />
-          {node.children!.length > 1 && (
-            <div 
-              className="h-px bg-border/60"
-              style={{ width: `calc(${(node.children!.length - 1) * 180}px + ${(node.children!.length - 1) * 16}px)` }}
-            />
-          )}
-          <div className="flex gap-4 pt-0">
-            {node.children!.map((child) => (
-              <div key={child.id} className="flex flex-col items-center">
-                {node.children!.length > 1 && <div className="w-px h-4 bg-border/60" />}
-                <TreeNodeCard 
-                  node={child} 
-                  level={level + 1} 
-                  onEdit={onEdit}
-                  onDelete={onDelete}
-                  onAdd={onAdd}
-                  onMove={onMove}
-                  draggedNodeId={draggedNodeId}
-                  setDraggedNodeId={setDraggedNodeId}
-                />
-              </div>
-            ))}
-          </div>
-        </>
-      )}
-    </div>
-  )
-}
 
 // ===== 卡片网格视图 =====
 function GridView({ 
@@ -691,9 +478,6 @@ export function Home() {
   const [selectedParentId, setSelectedParentId] = useState<string>('')
   const [actionLoading, setActionLoading] = useState(false)
 
-  // 拖拽状态
-  const [draggedNodeId, setDraggedNodeId] = useState<string | null>(null)
-
   // 获取所有成员作为上级选项
   const getParentOptions = useCallback((tree: OrgNode | null): { id: string; name: string; title: string }[] => {
     if (!tree) return []
@@ -835,32 +619,25 @@ export function Home() {
   }
 
   const handleMove = useCallback(async (nodeId: string, newParentId: string) => {
-    console.log('=== handleMove START ===')
-    console.log('handleMove called:', { nodeId, newParentId })
     try {
       const url = `./api/org/member/${nodeId}/move`
-      console.log('Fetching URL:', url)
       const res = await $fetch(url, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ newParentId }),
       })
-      console.log('Response status:', res.status)
       const result = await res.json()
-      console.log('Response data:', result)
       if (result.success) {
-        console.log('Move success, reloading data...')
         await loadData()
-        console.log('Data reloaded')
       } else {
         alert(result.error || '移动失败')
       }
-    } catch (err) {
-      console.error('Move error:', err)
+    } catch {
       alert('移动失败')
     }
-    console.log('=== handleMove END ===')
   }, [loadData])
+
+
 
   if (loading) {
     return (
@@ -881,14 +658,12 @@ export function Home() {
     switch (viewMode) {
       case 'tree':
         return (
-          <TreeNodeCard 
-            node={orgTree} 
-            onEdit={handleEdit} 
-            onDelete={handleDelete} 
-            onAdd={handleAdd} 
+          <ReactFlowOrgChart
+            orgTree={orgTree}
+            onAdd={handleAdd}
+            onEdit={handleEdit}
+            onDelete={handleDelete}
             onMove={handleMove}
-            draggedNodeId={draggedNodeId}
-            setDraggedNodeId={setDraggedNodeId}
           />
         )
       case 'grid':
@@ -899,14 +674,12 @@ export function Home() {
         return <DepartmentView nodes={[orgTree]} />
       default:
         return (
-          <TreeNodeCard 
-            node={orgTree} 
-            onEdit={handleEdit} 
-            onDelete={handleDelete} 
+          <ReactFlowOrgChart
+            orgTree={orgTree}
             onAdd={handleAdd}
+            onEdit={handleEdit}
+            onDelete={handleDelete}
             onMove={handleMove}
-            draggedNodeId={draggedNodeId}
-            setDraggedNodeId={setDraggedNodeId}
           />
         )
     }
