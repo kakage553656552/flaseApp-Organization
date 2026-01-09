@@ -277,7 +277,13 @@ const routes: ServerExports = {
 
   // 更新成员
   async 'PUT /api/org/member/:id'(req: Request, ctx: Context) {
-    const id = ctx.params?.id
+    // 从 URL 中提取 id（ctx.params 在此框架中可能不可用）
+    const url = new URL(req.url)
+    const pathParts = url.pathname.split('/')
+    // 路径格式: /apps/test-app/api/org/member/:id
+    const memberIndex = pathParts.indexOf('member')
+    const id = memberIndex >= 0 && pathParts.length > memberIndex + 1 ? pathParts[memberIndex + 1] : ctx.params?.id
+    
     if (!id) {
       return { success: false, error: '缺少成员 ID' }
     }
@@ -306,7 +312,13 @@ const routes: ServerExports = {
 
   // 删除成员
   async 'DELETE /api/org/member/:id'(req: Request, ctx: Context) {
-    const id = ctx.params?.id
+    // 从 URL 中提取 id（ctx.params 在此框架中可能不可用）
+    const url = new URL(req.url)
+    const pathParts = url.pathname.split('/')
+    // 路径格式: /apps/test-app/api/org/member/:id
+    const memberIndex = pathParts.indexOf('member')
+    const id = memberIndex >= 0 && pathParts.length > memberIndex + 1 ? pathParts[memberIndex + 1] : ctx.params?.id
+    
     if (!id) {
       return { success: false, error: '缺少成员 ID' }
     }
@@ -339,7 +351,13 @@ const routes: ServerExports = {
 
   // 获取单个成员详情
   async 'GET /api/org/member/:id'(req: Request, ctx: Context) {
-    const id = ctx.params?.id
+    // 从 URL 中提取 id（ctx.params 在此框架中可能不可用）
+    const url = new URL(req.url)
+    const pathParts = url.pathname.split('/')
+    // 路径格式: /apps/test-app/api/org/member/:id
+    const memberIndex = pathParts.indexOf('member')
+    const id = memberIndex >= 0 && pathParts.length > memberIndex + 1 ? pathParts[memberIndex + 1] : ctx.params?.id
+    
     if (!id) {
       return { success: false, error: '缺少成员 ID' }
     }
