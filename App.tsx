@@ -2,7 +2,7 @@ import * as React from 'react'
 import { Routes, Route } from 'react-router-dom'
 import { Spinner } from '#nexo/ui'
 import type { MenuNode } from '@/layouts/components/MenuItem'
-import { Home as HomeIcon } from 'lucide-react'
+import { Home as HomeIcon, LogIn, Network } from 'lucide-react'
 
 type RouteMeta = {
   name: string
@@ -31,6 +31,8 @@ type PageConfig = {
 
 const Icons: Record<string, React.ComponentType | undefined> = {
   Home: HomeIcon,
+  LogIn: LogIn,
+  Network: Network,
 }
 
 const pageModules = import.meta.glob('./pages/**/*.tsx')
@@ -160,16 +162,14 @@ function App() {
       }
     >
       <Routes>
-        <Route path="/" element={<DefaultLayout menuItems={menuItems} />}>
-          {pages.map(({ routePath, Component, isIndex }) =>
-            isIndex ? (
-              <Route key="index" index element={<Component />} />
-            ) : (
-              <Route key={routePath} path={routePath} element={<Component />} />
-            ),
-          )}
-          <Route path="*" element={<NotFoundPage />} />
-        </Route>
+        {pages.map(({ routePath, Component, isIndex }) =>
+          isIndex ? (
+            <Route key="index" path="/" element={<Component />} />
+          ) : (
+            <Route key={routePath} path={routePath} element={<Component />} />
+          ),
+        )}
+        <Route path="*" element={<NotFoundPage />} />
       </Routes>
     </React.Suspense>
   )

@@ -80,10 +80,16 @@
     },
     "menus": [
       {
+        "name": "login",
+        "label": "登录",
+        "path": "/login",
+        "icon": "LogIn"
+      },
+      {
         "name": "home",
-        "label": "Home",
+        "label": "组织架构",
         "path": "/",
-        "icon": "Home"
+        "icon": "Network"
       }
     ]
   },
